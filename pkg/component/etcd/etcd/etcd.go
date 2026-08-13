@@ -10,6 +10,7 @@ import (
 	"maps"
 	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -434,7 +435,24 @@ func (e *etcd) Deploy(ctx context.Context) error {
 
 		if e.values.StaticPodConfig != nil {
 			e.etcd.Spec.RunAsRoot = new(true)
-			metav1.SetMetaDataAnnotation(&e.etcd.ObjectMeta, druidcorev1alpha1.DisableEtcdRuntimeComponentCreationAnnotation, "")
+
+			// When etcd runs as a static pod (self-hosted control plane), its members are managed externally
+			// (e.g. by gardenadm) rather than by etcd-druid. Populating ExternallyManagedMemberAddresses signals
+			// this to druid, which then skips creation of the runtime components (Pods, Services, PDBs) and derives
+			// the cluster size from the number of addresses. The addresses may only be set on creation and must not
+			// be removed afterwards (enforced by CEL validation on the Etcd resource), so we append missing entries
+			// to any already-present list instead of overwriting it. The number of addresses must equal the replica
+			// count (also CEL-enforced), so we only override Replicas when at least one address is present.
+			addresses := slices.Clone(e.etcd.Spec.ExternallyManagedMemberAddresses)
+			for _, ip := range e.values.StaticPodConfig.ControlPlaneNodesIPAddresses {
+				if !slices.Contains(addresses, ip.String()) {
+					addresses = append(addresses, ip.String())
+				}
+			}
+			if len(addresses) > 0 {
+				e.etcd.Spec.ExternallyManagedMemberAddresses = addresses
+				e.etcd.Spec.Replicas = int32(len(addresses))
+			}
 		}
 
 		if existingEtcd == nil || existingEtcd.Spec.StorageCapacity == nil {

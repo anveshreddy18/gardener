@@ -73,8 +73,10 @@ images:
 
   - name: etcd-druid
     sourceRepository: github.com/gardener/etcd-druid
-    repository: europe-docker.pkg.dev/gardener-project/releases/gardener/etcd-druid
-    tag: "v0.37.1"
+    # TODO: locally-built image from etcd-druid PR gardener/etcd-druid#1397 (branch re-externally-managed,
+    # v0.38.0 "externally managed members"). Revert to the released etcd-druid image once v0.38.0 is published.
+    repository: docker.io/anveshreddy18/etcd-druid
+    tag: "externally-managed-members"
   - name: etcd
     sourceRepository: github.com/etcd-io/etcd
     repository: gcr.io/etcd-development/etcd

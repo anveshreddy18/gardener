@@ -75,8 +75,9 @@ func CheckEtcdObject(obj client.Object) error {
 
 	// If etcd replicas are set to 0, then we can skip readiness and updation checks, because druid does not perform
 	// condition checks on hibernated etcd clusters, and readiness no longer makes sense for hibernated etcd clusters.
-	// The same is done when the etcd runtime component creation is disabled.
-	if e.Spec.Replicas == 0 || !druidcorev1alpha1.IsEtcdRuntimeComponentCreationEnabled(e.ObjectMeta) {
+	// The same is done when the etcd members are managed externally (e.g. by gardenadm), since druid does not create
+	// or manage the runtime components (Pods, Services, PDBs) in that case.
+	if e.Spec.Replicas == 0 || !druidcorev1alpha1.ArePodsManagedByEtcdDruid(e) {
 		return nil
 	}
 

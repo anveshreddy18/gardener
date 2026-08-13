@@ -27,7 +27,7 @@ require (
 	github.com/gardener/pvc-autoscaler v0.3.0
 	github.com/gardener/terminal-controller-manager v0.38.0
 	github.com/go-jose/go-jose/v4 v4.1.4
-	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/logr v1.4.4
 	github.com/go-test/deep v1.1.1
 	github.com/google/gnostic-models v0.7.1
 	github.com/google/go-cmp v0.7.0
@@ -59,9 +59,9 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4
 	go.yaml.in/yaml/v4 v4.0.0-rc.2
 	golang.org/x/crypto v0.54.0
-	golang.org/x/text v0.40.0
+	golang.org/x/text v0.41.0
 	golang.org/x/time v0.15.0
-	golang.org/x/tools v0.47.0 // indirect
+	golang.org/x/tools v0.48.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/protobuf v1.36.12-0.20260806062936-644d0267c26e
@@ -366,3 +366,7 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
 )
+
+// TODO: testing etcd-druid v0.38.0 integration (PR gardener/etcd-druid#1397, branch re-externally-managed on the CaptainIRS fork).
+// Fork branch is used so it resolves from anywhere (local build + remote-local-setup pod). Drop and bump require to v0.38.0 once released.
+replace github.com/gardener/etcd-druid/api => github.com/CaptainIRS/etcd-druid/api v0.0.0-20260813093825-b093153627e7

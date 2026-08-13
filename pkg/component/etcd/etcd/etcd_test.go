@@ -370,8 +370,16 @@ var _ = Describe("Etcd", func() {
 			}
 
 			if staticPodConfig != nil {
-				obj.Annotations["druid.gardener.cloud/disable-etcd-runtime-component-creation"] = ""
 				obj.Spec.RunAsRoot = new(true)
+
+				var addresses []string
+				for _, ip := range staticPodConfig.ControlPlaneNodesIPAddresses {
+					addresses = append(addresses, ip.String())
+				}
+				if len(addresses) > 0 {
+					obj.Spec.ExternallyManagedMemberAddresses = addresses
+					obj.Spec.Replicas = int32(len(addresses))
+				}
 
 				if role == "events" {
 					obj.Spec.Backup.Port = new(int32(8081))
@@ -1230,6 +1238,18 @@ var _ = Describe("Etcd", func() {
 					Expect(c.Get(ctx, client.ObjectKey{Namespace: testNamespace, Name: "shoot-etcd-" + testRole}, pr)).To(Succeed())
 					pr.ResourceVersion = ""
 					Expect(pr).To(DeepEqual(prometheusRule("shoot", class, *replicas, false)))
+				})
+
+				It("should set the externally managed member addresses and drive replicas from them when control plane node IPs are configured", func() {
+					staticPodConfig.ControlPlaneNodesIPAddresses = []net.IP{net.ParseIP("1.2.3.4")}
+
+					Expect(etcd.Deploy(ctx)).To(Succeed())
+
+					deployedEtcd := &druidcorev1alpha1.Etcd{}
+					Expect(c.Get(ctx, client.ObjectKey{Namespace: testNamespace, Name: etcdName}, deployedEtcd)).To(Succeed())
+					Expect(deployedEtcd.Spec.ExternallyManagedMemberAddresses).To(ConsistOf("1.2.3.4"))
+					Expect(deployedEtcd.Spec.Replicas).To(Equal(int32(1)))
+					Expect(deployedEtcd.Spec.RunAsRoot).To(Equal(new(true)))
 				})
 			})
 
